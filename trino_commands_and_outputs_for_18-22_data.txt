@@ -1,0 +1,302 @@
+# Trino Commands and Output for 18-22 Data
+
+***
+
+1. Create external table:
+
+   ```hive
+   CREATE EXTERNAL TABLE project (
+      Reporting_Airline STRING,
+      Flight_Number_Reporting_Airline INT,
+      Origin STRING,
+      OriginCityName STRING,
+      OriginState STRING,
+      Dest STRING,
+      DestCityName STRING,
+      DestState STRING,
+      DepDelay INT,
+      DepDel15 INT,
+      ArrDelay INT,
+      ArrDel15 INT,
+      Cancelled INT,
+      AirTime INT,
+      Distance INT,
+      CarrierDelay INT,
+      WeatherDelay INT,
+      NASDelay INT,
+      SecurityDelay INT,
+      LateAircraftDelay INT
+   )
+   ROW FORMAT DELIMITED
+   FIELDS TERMINATED BY ','
+   LOCATION '/user/yl7789_nyu_edu/trinoInput/';
+   ```
+
+2. Top 5 airlines with the most # of flights
+
+   ```sql
+   SELECT Reporting_Airline, COUNT(*) AS Num_Flights
+   FROM project
+   GROUP BY Reporting_Airline
+   ORDER BY Num_Flights DESC
+   LIMIT 5;
+   ```
+
+   ```sql
+    Reporting_Airline | Num_Flights 
+   -------------------+------------
+    WN                |    6038109 
+    DL                |    4155706 
+    AA                |    4033876 
+    OO                |    3683234 
+    UA                |    2622301 
+   (5 rows)
+   ```
+
+3. Top 5 airlines with the least # of flights
+
+   ```sql
+   SELECT Reporting_Airline, COUNT(*) AS Num_Flights
+   FROM project
+   GROUP BY Reporting_Airline
+   ORDER BY Num_Flights ASC
+   LIMIT 5;
+   ```
+
+   ```sql
+    Reporting_Airline | Num_Flights 
+   -------------------+------------
+    VX                |      17586 
+    QX                |     200089 
+    HA                |     334889 
+    EV                |     388535 
+    G4                |     531225 
+   (5 rows)
+   ```
+
+4. Top 5 airlines with the highest delay rate
+
+   ```sql
+   SELECT Reporting_Airline, 
+          COUNT(*) AS Total_Flights, 
+          SUM(CASE WHEN ArrDelay > 0 THEN 1 ELSE 0 END) AS Delayed_Flights,
+          (1.0000 * SUM(CASE WHEN ArrDelay > 0 THEN 1 ELSE 0 END) / COUNT(*)) AS Delay_Rate
+   FROM project
+   GROUP BY Reporting_Airline
+   ORDER BY Delay_Rate DESC
+   LIMIT 5;
+   ```
+
+   ```sql
+    Reporting_Airline | Total_Flights | Delayed_Flights | Delay_Rate 
+   -------------------+---------------+-----------------+------------
+    G4                |        531225 |          216751 |     0.4080 
+    B6                |       1218478 |          478521 |     0.3927 
+    F9                |        638460 |          247679 |     0.3879 
+    VX                |         17586 |            6338 |     0.3604 
+    HA                |        334889 |          120355 |     0.3594 
+   (5 rows)
+   ```
+
+5. Top 5 airlines with the lowest delay rate
+
+   ```sql
+   SELECT Reporting_Airline, 
+          COUNT(*) AS Total_Flights, 
+          SUM(CASE WHEN ArrDelay > 0 THEN 1 ELSE 0 END) AS Delayed_Flights,
+          (1.0000 * SUM(CASE WHEN ArrDelay > 0 THEN 1 ELSE 0 END) / COUNT(*)) AS Delay_Rate
+   FROM project
+   GROUP BY Reporting_Airline
+   ORDER BY Delay_Rate ASC
+   LIMIT 5;
+   ```
+
+   ```sql
+    Reporting_Airline | Total_Flights | Delayed_Flights | Delay_Rate 
+   -------------------+---------------+-----------------+------------
+    9E                |       1209881 |          287740 |     0.2378 
+    DL                |       4155706 |         1134446 |     0.2730 
+    YX                |       1511113 |          436115 |     0.2886 
+    OO                |       3683234 |         1097967 |     0.2981 
+    UA                |       2622301 |          854196 |     0.3257 
+   (5 rows)
+   ```
+
+6. Top 5 airlines with the most delay average time
+
+   ```sql
+   SELECT Reporting_Airline, 
+          AVG(ArrDelay) AS Avg_Delay_Time
+   FROM project
+   WHERE ArrDelay > 0
+   GROUP BY Reporting_Airline
+   ORDER BY Avg_Delay_Time DESC
+   LIMIT 5;
+   ```
+
+   ```sql
+    Reporting_Airline |   Avg_Delay_Time   
+   -------------------+--------------------
+    EV                | 52.279970232897206 
+    B6                |  50.47053316364381 
+    YV                |  47.55351837674971 
+    OO                |  46.78142239247628 
+    F9                |  46.48063824547095 
+   (5 rows)
+   ```
+
+7. Top 5 airlines with the least delay average time
+
+   ```sql
+   SELECT Reporting_Airline, 
+          AVG(ArrDelay) AS Avg_Delay_Time
+   FROM project
+   WHERE ArrDelay > 0
+   GROUP BY Reporting_Airline
+   ORDER BY Avg_Delay_Time ASC
+   LIMIT 5;
+   ```
+
+   ```sql
+    Reporting_Airline |   Avg_Delay_Time   
+   -------------------+--------------------
+    HA                |  19.47772007810228 
+    QX                |  24.72171320853974 
+    AS                | 27.767220245585108 
+    WN                | 29.724797365876885 
+    VX                | 32.343799305774695 
+   (5 rows)
+   ```
+
+8. Top 5 airports with the most number of flight takeoff + arrive
+
+   ```sql
+   SELECT Airport, 
+          COUNT(*) AS Total_Flights
+   FROM (
+     SELECT Origin AS Airport
+     FROM project
+     UNION ALL
+     SELECT Dest AS Airport
+     FROM project
+   ) AS All_Airports
+   GROUP BY Airport
+   ORDER BY Total_Flights DESC
+   LIMIT 5;
+   ```
+
+   ```sql
+    Airport | Total_Flights 
+   ---------+---------------
+    ATL     |       3336522 
+    DFW     |       2724265 
+    ORD     |       2720574 
+    DEN     |       2432112 
+    CLT     |       2062270 
+   (5 rows)
+   ```
+
+9. Top 5 airports with the least number of flight takeoff + arrive
+
+   ```sql
+   SELECT Airport, 
+          COUNT(*) AS Total_Flights
+   FROM (
+     SELECT Origin AS Airport
+     FROM project
+     UNION ALL
+     SELECT Dest AS Airport
+     FROM project
+   ) AS All_Airports
+   GROUP BY Airport
+   ORDER BY Total_Flights ASC
+   LIMIT 5;
+   ```
+
+   ```
+    Airport | Total_Flights 
+   ---------+---------------
+    YNG     |             4 
+    IFP     |            91 
+    IPT     |           142 
+    ILG     |           329 
+    BFM     |           408 
+   (5 rows)
+   ```
+
+10. Top 5 airports that flights take off with the highest rate of delay
+
+   ```sql
+   SELECT Origin, 
+          COUNT(*) AS Total_Flights, 
+          SUM(CASE WHEN ArrDelay > 0 THEN 1 ELSE 0 END) AS Delayed_Flights,
+          (1.0000 * SUM(CASE WHEN ArrDelay > 0 THEN 1 ELSE 0 END) / COUNT(*)) AS Delay_Rate
+   FROM project
+   GROUP BY Origin
+   ORDER BY Delay_Rate DESC
+   LIMIT 5;
+   ```
+
+   ```sql
+    Origin | Total_Flights | Delayed_Flights | Delay_Rate 
+   --------+---------------+-----------------+------------
+    YNG    |             2 |               2 |     1.0000 
+    CDB    |           262 |             165 |     0.6298 
+    IFP    |            45 |              27 |     0.6000 
+    PPG    |           334 |             192 |     0.5749 
+    ILG    |           165 |              94 |     0.5697 
+   (5 rows)
+   ```
+
+11. Top 5 airports that flights take off with the lowest rate of delay
+
+    ```sql
+    SELECT Origin, 
+           COUNT(*) AS Total_Flights, 
+           SUM(CASE WHEN ArrDelay > 0 THEN 1 ELSE 0 END) AS Delayed_Flights,
+           (1.0000 * SUM(CASE WHEN ArrDelay > 0 THEN 1 ELSE 0 END) / COUNT(*)) AS Delay_Rate
+    FROM project
+    GROUP BY Origin
+    ORDER BY Delay_Rate ASC
+    LIMIT 5;
+    ```
+
+    ```sql
+     Origin | Total_Flights | Delayed_Flights | Delay_Rate 
+    --------+---------------+-----------------+------------
+     TBN    |           631 |              64 |     0.1014 
+     VCT    |          1315 |             146 |     0.1110 
+     IPT    |            71 |               9 |     0.1268 
+     ALS    |           990 |             154 |     0.1556 
+     FOD    |          1048 |             165 |     0.1574 
+    (5 rows)
+    ```
+
+12. Correlation between delay time and air time
+
+    ```sql
+    SELECT CORR(ArrDelay, AirTime) AS Correlation
+    FROM project
+    WHERE ArrDelay > 0;
+    ```
+
+    ```sql
+     Correlation  
+    --------------
+     -0.010033339 
+    (1 row)
+    ```
+
+13. Correlation between delay time and distance
+
+    ```sql
+    SELECT CORR(ArrDelay, Distance) AS Correlation
+    FROM project
+    WHERE ArrDelay > 0;
+    ```
+
+    ```sql
+      correlation  
+    ---------------
+     -0.0074704345 
+    ```
