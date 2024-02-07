@@ -2,12 +2,12 @@
 
 ## Intro
 
-* This is a reminder APP that allows you to add your own tasks and due date.
-* Double click the task to highlight.
+- This is a big data analytics project analyzing over 20GB of airline data using Hadoop and Trino.
+- Data available at: https://www.bts.gov/topics/airlines-airports-and-aviation
 
 ## How to Run
 
-* For the MapReduce programs:
+- For the MapReduce programs:
 
   1. First, compile the Java classes:
 
@@ -31,7 +31,7 @@
   4. Forth, run the MapReduce program:
 
      ```shell
-     hadoop jar <jobName>.jar <jobName> <airlineData>.csv lab2/output
+     hadoop jar <jobName>.jar <jobName> <airlineData>.csv playGround/output
      ```
 
   5. To verify that the program has run and the results are correct:
@@ -41,7 +41,7 @@
      hadoop fs -cat playGround/output/part-r-00000
      ```
 
-* For the Trino commands:
+- For the Trino commands:
 
   1. Start the Trino or Presto shell
   2. Select a connector that can access the data
